@@ -19,7 +19,7 @@ func readMySQL(conn *sql.DB, query string) error {
 	defer rows.Close()
 
 	start := time.Now()
-	a := new(int64)
+	a := new(sql.NullInt64)
 	for rows.Next() {
 		err = rows.Scan(a)
 		if err != nil {
@@ -32,11 +32,11 @@ func readMySQL(conn *sql.DB, query string) error {
 	return nil
 }
 
-func readArrow(conn *sql.DB, query string) error {
+func readArrow(conn *sql.DB, query string, printRows bool) error {
 	arrowExecutor := S2DBArrow{Conn: conn}
 	defer arrowExecutor.Close()
 
-	err := arrowExecutor.Execute(context.Background(), 100000, "SELECT * FROM t")
+	err := arrowExecutor.Execute(context.Background(), 100000, query)
 	if err != nil {
 		return err
 	}
@@ -53,6 +53,13 @@ func readArrow(conn *sql.DB, query string) error {
 	elapsed := time.Since(start)
 	fmt.Printf("Reading with parsing took %s\n", elapsed)
 
+	if printRows {
+		for _, batch := range batches {
+			for i, col := range batch.Columns() {
+				fmt.Printf("column[%d] %q: %v\n", i, batch.ColumnName(i), col)
+			}
+		}
+	}
 	return nil
 }
 
@@ -63,12 +70,14 @@ func TestRead(t *testing.T) {
 	}
 	defer db.Close()
 
-	err = readMySQL(db, "SELECT * FROM t")
+	query := "SELECT * FROM t"
+
+	err = readArrow(db, query, false)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = readArrow(db, "SELECT * FROM t")
+	err = readMySQL(db, query)
 	if err != nil {
 		t.Error(err)
 	}

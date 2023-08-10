@@ -11,10 +11,11 @@ import (
 type ColumnHandler interface {
 	GetVariable() interface{}
 	GetField() arrow.Field
-	AppendValue(builder *array.RecordBuilder)
+	AppendValues(builder *array.RecordBuilder, rows int64)
+	SetVariable(row int64)
 }
 
-func GetColumnHandler(index int, column *sql.ColumnType) (ColumnHandler, error) {
+func GetColumnHandler(index int, column *sql.ColumnType, batchSize int64) (ColumnHandler, error) {
 	nullable, ok := column.Nullable()
 	if !ok {
 		panic("SQL driver doesn't support nullable property")
@@ -23,7 +24,7 @@ func GetColumnHandler(index int, column *sql.ColumnType) (ColumnHandler, error) 
 	switch column.DatabaseTypeName() {
 	case "BIGINT":
 		if nullable {
-			return NewNullInt64ColumnHandler(column.Name(), index), nil
+			return NewNullInt64ColumnHandler(column.Name(), index, batchSize), nil
 		} else {
 			return nil, fmt.Errorf("unsupported data type '%s'", column.DatabaseTypeName())
 		}
