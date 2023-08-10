@@ -51,7 +51,7 @@ func readArrow(conn *sql.DB, query string, printRows bool) error {
 		batches = append(batches, batch)
 	}
 	elapsed := time.Since(start)
-	fmt.Printf("Reading with parsing took %s\n", elapsed)
+	fmt.Printf("Reading with parsing to arrow took %s\n", elapsed)
 
 	if printRows {
 		for _, batch := range batches {
