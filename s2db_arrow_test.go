@@ -19,7 +19,7 @@ func readMySQL(conn *sql.DB, query string) error {
 	defer rows.Close()
 
 	start := time.Now()
-	a := new(sql.NullInt64)
+	a := new(sql.NullString)
 	for rows.Next() {
 		err = rows.Scan(a)
 		if err != nil {
@@ -70,9 +70,9 @@ func TestRead(t *testing.T) {
 	}
 	defer db.Close()
 
-	query := "SELECT * FROM t"
+	query := "SELECT * FROM allTypesTable"
 
-	err = readArrow(db, query, false)
+	err = readArrow(db, query, true)
 	if err != nil {
 		t.Error(err)
 	}

@@ -9,7 +9,7 @@ import (
 
 type NullInt64ColumnHandler struct {
 	values    []int64
-	isNull    []bool
+	notNull   []bool
 	batchSize int64
 	variable  *sql.NullInt64
 	field     arrow.Field
@@ -27,7 +27,7 @@ func NewNullInt64ColumnHandler(name string, index int, batchSize int64) *NullInt
 		index:     index,
 		batchSize: batchSize,
 		values:    make([]int64, batchSize),
-		isNull:    make([]bool, batchSize),
+		notNull:   make([]bool, batchSize),
 	}
 
 	return res
@@ -39,7 +39,7 @@ func (th *NullInt64ColumnHandler) GetVariable() interface{} {
 
 func (th *NullInt64ColumnHandler) SetVariable(row int64) {
 	th.values[row] = th.variable.Int64
-	th.isNull[row] = th.variable.Valid
+	th.notNull[row] = th.variable.Valid
 }
 
 func (th *NullInt64ColumnHandler) GetField() arrow.Field {
@@ -47,5 +47,5 @@ func (th *NullInt64ColumnHandler) GetField() arrow.Field {
 }
 
 func (th *NullInt64ColumnHandler) AppendValues(builder *array.RecordBuilder, rows int64) {
-	builder.Field(th.index).(*array.Int64Builder).AppendValues(th.values[:rows], th.isNull[:rows])
+	builder.Field(th.index).(*array.Int64Builder).AppendValues(th.values[:rows], th.notNull[:rows])
 }

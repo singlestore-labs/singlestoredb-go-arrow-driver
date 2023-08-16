@@ -83,7 +83,15 @@ func (s2db *S2DBArrow) GetNextArrowRecordBatch() (array.Record, error) {
 }
 
 func (s2db *S2DBArrow) Close() error {
-	defer s2db.recordBuilder.Release()
+	defer func() {
+		if s2db.recordBuilder != nil {
+			s2db.recordBuilder.Release()
+		}
+	}()
+
+	if s2db.rows == nil {
+		return nil
+	}
 
 	return s2db.rows.Close()
 }
