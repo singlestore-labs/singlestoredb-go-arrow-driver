@@ -20,16 +20,9 @@ type S2DBArrowReaderImpl struct {
 	variables      []interface{}
 }
 
-// NewS2DBArrowReader creates an instance of S2DBArrowReader
-// It sends a query to the database server for execution with provided arguments and using provided connection
-// The S2DBArrowReader created by this function will fetch rows by batches of recordSize rows
-func NewS2DBArrowReader(ctx context.Context, conn S2SqlDbWrapper, recordSize int64, query string, args ...interface{}) (S2DBArrowReader, error) {
-	if recordSize <= 0 {
-		recordSize = 10000
-	}
-
+func NewS2DBArrowReaderImpl(ctx context.Context, conf S2DbArrowReaderConfig) (S2DBArrowReader, error) {
 	var err error = nil
-	rows, err := conn.QueryContext(ctx, query, args...)
+	rows, err := conf.Conn.QueryContext(ctx, conf.Query, conf.Args...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +42,7 @@ func NewS2DBArrowReader(ctx context.Context, conn S2SqlDbWrapper, recordSize int
 	fields := make([]arrow.Field, len(cols))
 	variables := make([]interface{}, len(cols))
 	for index, col := range cols {
-		columnHandlers[index], err = column_handler.GetColumnHandler(index, col, recordSize)
+		columnHandlers[index], err = column_handler.GetColumnHandler(index, col, conf.RecordSize)
 		if err != nil {
 			return nil, err
 		}
@@ -66,9 +59,9 @@ func NewS2DBArrowReader(ctx context.Context, conn S2SqlDbWrapper, recordSize int
 	recordBuilder := array.NewRecordBuilder(pool, schema)
 
 	return &S2DBArrowReaderImpl{
-		conn:           conn,
+		conn:           conf.Conn,
 		rows:           rows,
-		recordSize:     recordSize,
+		recordSize:     conf.RecordSize,
 		recordBuilder:  recordBuilder,
 		columnHandlers: columnHandlers,
 		variables:      variables,
