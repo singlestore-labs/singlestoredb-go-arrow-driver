@@ -6,7 +6,7 @@ import (
 )
 
 // S2DB is a utility wrapper around sql.DB, used only by the driver
-type S2DB interface {
+type S2SqlDbWrapper interface {
 	Stats() sql.DBStats
 	Close() error
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)

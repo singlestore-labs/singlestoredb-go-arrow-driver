@@ -10,9 +10,9 @@ import (
 	"github.com/singlestore-labs/singlestoredb-go-arrow-driver/column_handler"
 )
 
-// S2DBArrow implements S2DBArrowExecutor
-type S2DBArrow struct {
-	Conn           S2DB
+// S2DBArrow implements S2DBArrowReader
+type S2DBArrowReaderImpl struct {
+	conn           S2SqlDbWrapper
 	rows           *sql.Rows
 	recordSize     int64
 	recordBuilder  *array.RecordBuilder
@@ -20,31 +20,39 @@ type S2DBArrow struct {
 	variables      []interface{}
 }
 
-func (s2db *S2DBArrow) Execute(ctx context.Context, recordSize int64, query string, args ...interface{}) error {
-	s2db.recordSize = recordSize
+func NewS2DBArrowReader(ctx context.Context, conn S2SqlDbWrapper, recordSize int64, query string, args ...interface{}) (S2DBArrowReader, error) {
+	if recordSize <= 0 {
+		recordSize = 10000
+	}
 
 	var err error = nil
-	s2db.rows, err = s2db.Conn.QueryContext(ctx, query, args...)
+	rows, err := conn.QueryContext(ctx, query, args...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	cols, err := s2db.rows.ColumnTypes()
-	if err != nil {
-		return err
-	}
-
-	s2db.columnHandlers = make([]column_handler.ColumnHandler, len(cols))
-	fields := make([]arrow.Field, len(cols))
-	s2db.variables = make([]interface{}, len(cols))
-	for index, col := range cols {
-		s2db.columnHandlers[index], err = column_handler.GetColumnHandler(index, col, s2db.recordSize)
+	defer func() {
+		// If we failed to create a reader - clean up rows
 		if err != nil {
-			return err
+			rows.Close()
+		}
+	}()
+
+	cols, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	columnHandlers := make([]column_handler.ColumnHandler, len(cols))
+	fields := make([]arrow.Field, len(cols))
+	variables := make([]interface{}, len(cols))
+	for index, col := range cols {
+		columnHandlers[index], err = column_handler.GetColumnHandler(index, col, recordSize)
+		if err != nil {
+			return nil, err
 		}
 
-		fields[index] = s2db.columnHandlers[index].GetField()
-		s2db.variables[index] = s2db.columnHandlers[index].GetVariable()
+		fields[index] = columnHandlers[index].GetField()
+		variables[index] = columnHandlers[index].GetVariable()
 	}
 
 	pool := memory.NewGoAllocator()
@@ -52,12 +60,19 @@ func (s2db *S2DBArrow) Execute(ctx context.Context, recordSize int64, query stri
 		fields,
 		nil,
 	)
-	s2db.recordBuilder = array.NewRecordBuilder(pool, schema)
+	recordBuilder := array.NewRecordBuilder(pool, schema)
 
-	return nil
+	return &S2DBArrowReaderImpl{
+		conn:           conn,
+		rows:           rows,
+		recordSize:     recordSize,
+		recordBuilder:  recordBuilder,
+		columnHandlers: columnHandlers,
+		variables:      variables,
+	}, err
 }
 
-func (s2db *S2DBArrow) GetNextArrowRecordBatch() (array.Record, error) {
+func (s2db *S2DBArrowReaderImpl) GetNextArrowRecordBatch() (array.Record, error) {
 	var err error = nil
 	rowsRead := int64(0)
 
@@ -82,7 +97,7 @@ func (s2db *S2DBArrow) GetNextArrowRecordBatch() (array.Record, error) {
 	return s2db.recordBuilder.NewRecord(), nil
 }
 
-func (s2db *S2DBArrow) Close() error {
+func (s2db *S2DBArrowReaderImpl) Close() error {
 	defer func() {
 		if s2db.recordBuilder != nil {
 			s2db.recordBuilder.Release()

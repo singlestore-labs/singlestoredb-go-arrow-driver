@@ -33,13 +33,11 @@ func readMySQL(conn *sql.DB, query string) error {
 }
 
 func readArrow(conn *sql.DB, query string, printRows bool) error {
-	arrowExecutor := S2DBArrow{Conn: conn}
-	defer arrowExecutor.Close()
-
-	err := arrowExecutor.Execute(context.Background(), 100000, query)
+	arrowExecutor, err := NewS2DBArrowReader(context.Background(), conn, 100000, query)
 	if err != nil {
 		return err
 	}
+	defer arrowExecutor.Close()
 
 	start := time.Now()
 	batches := make([]array.Record, 0)
