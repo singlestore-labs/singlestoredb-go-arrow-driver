@@ -20,6 +20,9 @@ type S2DBArrowReaderImpl struct {
 	variables      []interface{}
 }
 
+// NewS2DBArrowReader creates an instance of S2DBArrowReader
+// It sends a query to the database server for execution with provided arguments and using provided connection
+// The S2DBArrowReader created by this function will fetch rows by batches of recordSize rows
 func NewS2DBArrowReader(ctx context.Context, conn S2SqlDbWrapper, recordSize int64, query string, args ...interface{}) (S2DBArrowReader, error) {
 	if recordSize <= 0 {
 		recordSize = 10000
