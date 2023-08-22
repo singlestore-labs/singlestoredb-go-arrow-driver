@@ -79,16 +79,16 @@ func readParallel(conn *sql.DB, query string) error {
 }
 
 func readArrow(conn *sql.DB, query string) error {
-	arrowExecutor, err := NewS2DBArrowReader(context.Background(), S2DbArrowReaderConfig{
+	arrowReader, err := NewS2DBArrowReader(context.Background(), S2DBArrowReaderConfig{
 		Conn:  conn,
 		Query: query,
 	})
 	if err != nil {
 		return err
 	}
-	defer arrowExecutor.Close()
+	defer arrowReader.Close()
 
-	for batch, err := arrowExecutor.GetNextArrowRecordBatch(); batch != nil; batch, err = arrowExecutor.GetNextArrowRecordBatch() {
+	for batch, err := arrowReader.GetNextArrowRecordBatch(); batch != nil; batch, err = arrowReader.GetNextArrowRecordBatch() {
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ func readArrow(conn *sql.DB, query string) error {
 }
 
 func readArrowParallel(conn *sql.DB, query string) error {
-	arrowExecutor, err := NewS2DBArrowReader(context.Background(), S2DbArrowReaderConfig{
+	arrowReader, err := NewS2DBArrowReader(context.Background(), S2DBArrowReaderConfig{
 		Conn:  conn,
 		Query: query,
 		ParallelReadConfig: &S2DBParallelReadConfig{
@@ -109,9 +109,9 @@ func readArrowParallel(conn *sql.DB, query string) error {
 	if err != nil {
 		return err
 	}
-	defer arrowExecutor.Close()
+	defer arrowReader.Close()
 
-	for batch, err := arrowExecutor.GetNextArrowRecordBatch(); batch != nil; batch, err = arrowExecutor.GetNextArrowRecordBatch() {
+	for batch, err := arrowReader.GetNextArrowRecordBatch(); batch != nil; batch, err = arrowReader.GetNextArrowRecordBatch() {
 		if err != nil {
 			return err
 		}

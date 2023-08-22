@@ -2,6 +2,7 @@ package s2db_arrow_driver
 
 import (
 	"context"
+	"crypto/md5"
 	"database/sql"
 	"fmt"
 	"math/rand"
@@ -41,17 +42,17 @@ func getPartitionsCount(ctx context.Context, conn S2SqlDbWrapper, database strin
 	return partitions, nil
 }
 
-func generateTableName() string {
-	return "goArrowResultTable" + strconv.Itoa(rand.Intn(4294967295))
+func generateTableName(query string) string {
+	return "goArrowResultTable_" + fmt.Sprintf("%x", md5.Sum([]byte(query))) + "_" + strconv.Itoa(rand.Intn(4294967295))
 }
 
-func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DbArrowReaderConfig) (S2DBArrowReader, error) {
+func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBArrowReader, error) {
 	partitions, err := getPartitionsCount(ctx, conf.Conn, conf.ParallelReadConfig.DatabaseName)
 	if err != nil {
 		return nil, err
 	}
 
-	resultTableName := generateTableName()
+	resultTableName := generateTableName(conf.Query)
 	createResultTableQuery := fmt.Sprintf("CREATE RESULT TABLE `%s` AS SELECT * FROM (%s)", resultTableName, conf.Query)
 	resultTableConn, err := conf.Conn.Conn(ctx)
 	if err != nil {
@@ -63,8 +64,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DbArrowReaderCon
 		}
 	}()
 
-	_, err = resultTableConn.ExecContext(ctx, createResultTableQuery, conf.Args...)
-	if err != nil {
+	if _, err = resultTableConn.ExecContext(ctx, createResultTableQuery, conf.Args...); err != nil {
 		return nil, err
 	}
 	defer func() {
@@ -88,7 +88,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DbArrowReaderCon
 					}
 				}()
 
-				arrowReader, err := NewS2DBArrowReader(ctx, S2DbArrowReaderConfig{
+				arrowReader, err := NewS2DBArrowReader(ctx, S2DBArrowReaderConfig{
 					Conn:       conf.Conn,
 					Query:      fmt.Sprintf("SELECT * FROM ::`%s` WHERE partition_id() = %d", resultTableName, partition),
 					RecordSize: conf.RecordSize,

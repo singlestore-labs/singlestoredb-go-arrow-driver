@@ -20,7 +20,7 @@ type S2DBArrowReaderImpl struct {
 	variables      []interface{}
 }
 
-func NewS2DBArrowReaderImpl(ctx context.Context, conf S2DbArrowReaderConfig) (S2DBArrowReader, error) {
+func NewS2DBArrowReaderImpl(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBArrowReader, error) {
 	var err error = nil
 	rows, err := conf.Conn.QueryContext(ctx, conf.Query, conf.Args...)
 	if err != nil {
