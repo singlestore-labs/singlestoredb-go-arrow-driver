@@ -52,8 +52,6 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 		return nil, err
 	}
 
-	resultTableName := generateTableName(conf.Query)
-	createResultTableQuery := fmt.Sprintf("CREATE RESULT TABLE `%s` AS SELECT * FROM (%s)", resultTableName, conf.Query)
 	resultTableConn, err := conf.Conn.Conn(ctx)
 	if err != nil {
 		return nil, err
@@ -64,6 +62,8 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 		}
 	}()
 
+	resultTableName := generateTableName(conf.Query)
+	createResultTableQuery := fmt.Sprintf("CREATE RESULT TABLE `%s` AS SELECT * FROM (%s)", resultTableName, conf.Query)
 	if _, err = resultTableConn.ExecContext(ctx, createResultTableQuery, conf.Args...); err != nil {
 		return nil, err
 	}
