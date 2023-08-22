@@ -12,6 +12,7 @@ import (
 type S2DBArrowReader interface {
 	// GetNextArrowRecordBatch fetches a single arrow.Record from the server
 	// It returns nil as the first part of the result tuple if there are no more rows to fetch
+	// The returned Record must be Release()'d after use.
 	GetNextArrowRecordBatch() (array.Record, error)
 	// Close finalizes reading of the query results
 	// It releases all acquired resources
@@ -40,6 +41,7 @@ type S2DBParallelReadConfig struct {
 	// ChannelSize specifies size of the channel buffer
 	// Channel is used to store references to Arrow Records while reading is happening
 	// and transfer them to the main goroutine
+	// The default value is 10000
 	ChannelSize int64
 }
 
@@ -47,11 +49,11 @@ type S2DBParallelReadConfig struct {
 // It sends a query to the database server for execution
 func NewS2DBArrowReader(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBArrowReader, error) {
 	if conf.Conn == nil {
-		return nil, errors.New("conn is a required configuration")
+		return nil, errors.New("'Conn' is a required configuration")
 	}
 
 	if conf.Query == "" {
-		return nil, errors.New("query is a required configuration")
+		return nil, errors.New("'Query' is a required configuration")
 	}
 
 	if conf.RecordSize == 0 {
@@ -62,7 +64,7 @@ func NewS2DBArrowReader(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBAr
 		return NewS2DBArrowReaderImpl(ctx, conf)
 	} else {
 		if conf.ParallelReadConfig.DatabaseName == "" {
-			return nil, errors.New("database name is a required configuration for parallel read")
+			return nil, errors.New("'DatabaseName' is a required configuration for parallel read")
 		}
 
 		if conf.ParallelReadConfig.ChannelSize == 0 {
