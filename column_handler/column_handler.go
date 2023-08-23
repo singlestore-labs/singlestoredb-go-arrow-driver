@@ -55,7 +55,7 @@ func GetColumnHandler(index int, column *sql.ColumnType, batchSize int64) (Colum
 
 	case "TINYINT":
 		if nullable {
-			return NewNullInt8ColumnHandler(column.Name(), index, batchSize), nil
+			return NewNullBooleanColumnHandler(column.Name(), index, batchSize), nil
 		} else {
 			return NewBooleanColumnHandler(column.Name(), index, batchSize), nil
 		}
