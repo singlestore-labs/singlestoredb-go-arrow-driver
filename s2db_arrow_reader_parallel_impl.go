@@ -24,8 +24,8 @@ type S2DBArrowReaderParallelImpl struct {
 	ctx             context.Context
 }
 
-func getPartitionsCount(ctx context.Context, conn S2SqlDbWrapper, database string, args ...interface{}) (int32, error) {
-	rows, err := conn.QueryContext(ctx, fmt.Sprintf("SELECT num_partitions FROM information_schema.DISTRIBUTED_DATABASES WHERE database_name = '%s'", database), args...)
+func getPartitionsCount(ctx context.Context, conn S2SqlDbWrapper, database string) (int32, error) {
+	rows, err := conn.QueryContext(ctx, fmt.Sprintf("SELECT num_partitions FROM information_schema.DISTRIBUTED_DATABASES WHERE database_name = '%s'", database))
 	if err != nil {
 		return 0, err
 	}
