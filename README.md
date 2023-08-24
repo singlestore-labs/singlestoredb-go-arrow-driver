@@ -9,7 +9,7 @@ go get github.com/singlestore-labs/singlestoredb-go-arrow-driver
 
 ## API
 
-The `S2DBArrowReader` provides an API for reading Apache Arrow data from the SingleStore database. To create a new instance of `S2DBArrowReader`, use the `NewS2DBArrowReader` function. Here is an overview of the methods provided by `S2DBArrowReader`:
+The `S2DBArrowReader` provides an API for reading Apache Arrow data from SingleStoreDB databases. To create a new instance of `S2DBArrowReader`, use the `NewS2DBArrowReader` function. `S2DBArrowReader` provides the following methods:
   * `GetNextArrowRecordBatch`. Retrieves a single `arrow.Record` from the database. It returns `nil` as the first part of the result tuple when there are no more rows to fetch. The returned `Record` must be released using the `Release()` method after use.
   * `Close`. Finalizes the reading of query results and releases all acquired resources.
 
