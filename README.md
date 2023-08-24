@@ -15,7 +15,7 @@ The `S2DBArrowReader` provides an API for reading Apache Arrow data from SingleS
 
 ## Configuration
 
-The `NewS2DBArrowReader` function takes the `S2DBArrowReaderConfig` as a parameter. Here are the reader configurations and their explanations:
+The `NewS2DBArrowReader` function takes `S2DBArrowReaderConfig` as a parameter. Here are the supported reader configurations and their explanations:
 | Name               | Default               | Description  | 
 | :------------------| :-------------------- | :----------- |
 | Conn               | No default (required) | The `sql.DB` object used for communication with the database.
