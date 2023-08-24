@@ -2,7 +2,7 @@
 The SingleStoreDB Go Arrow driver facilitates the reading of data in Apache Arrow format from SingleStoreDB databases. Note that this is the alpha release of the driver, and there may be changes to the API, type conversion, and other internal implementations in the future.
 
 ## Installation
-To add the SingleStoreDB Go Arrow Driver as a dependency to your Go module, use the following command:
+Run the following command to add the SingleStoreDB Go Arrow driver as a dependency to your Go module:
 ```
 go get github.com/singlestore-labs/singlestoredb-go-arrow-driver
 ```
