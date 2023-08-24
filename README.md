@@ -69,7 +69,7 @@ For achieving maximum performance, consider using parallel read. The speed of pa
 Additionally, performance is influenced by the data types in the SingleStore database. Performance tests conducted by the SingleStore team demonstrated that nullable data types are slower than non-nullable ones. Therefore, consider using non-nullable data types when appropriate.
 
 ## Data type mapping
-The following table illustrates the type mapping between SingleStore data types and Arrow data types. Please note that this mapping is based on the alpha version of the driver and might change in the future.
+The following table maps the SingleStoreDB data types to the corresponding Arrow data types. Note that this mapping is based on the alpha version of the driver and it may change in the future.
 
 | SingleStore Data Type | Arrow Data Type    | 
 | :-------------------- | :----------------- |
