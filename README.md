@@ -28,7 +28,7 @@ The `S2DBParallelReadConfig` allows you to configure additional settings for par
 | Name               | Default               | Description  | 
 | :------------------| :-------------------- | :----------- |
 | DatabaseName       | No default (required) | The name of the SingleStore database. This is required to determine the number of partitions for parallel reading.
-| ChannelSize        | 10000                 | The size of the channel buffer. The channel stores references to Arrow Records while reading is in progress and transfers them to the main goroutine.
+| ChannelSize        | 10000                 | The size of the channel buffer. The channel stores references to Arrow Records while reading is in progress and transfers them to the main `goroutine`.
 
 ## Usage example
 
