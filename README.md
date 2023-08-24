@@ -71,7 +71,7 @@ Additionally, performance is influenced by the data types in the SingleStore dat
 ## Data type mapping
 The following table maps the SingleStoreDB data types to the corresponding Arrow data types. Note that this mapping is based on the alpha version of the driver and it may change in the future.
 
-| SingleStore Data Type | Arrow Data Type    | 
+| SingleStoreDB Data Type | Arrow Data Type    | 
 | :-------------------- | :----------------- |
 | UNSIGNED TINYINT      | uint8
 | UNSIGNED SMALLINT     | uint16
