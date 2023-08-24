@@ -64,7 +64,7 @@ for batch, err := arrowReader.GetNextArrowRecordBatch(); batch != nil; batch, er
 
 ## Performance Considerations
 
-For achieving maximum performance, consider using parallel read. The speed of parallel read depends on the size of the SingleStore cluster and the number of CPU cores on the machine where the code runs. It is recommended to use a machine with a number of CPU cores equal to the number of partitions in the SingleStore database, although this is not mandatory.
+To achieve maximum performance, consider using parallel read. The performance of parallel read depends on the size of the SingleStore cluster and the number of CPU cores on the machine where the code runs. SingleStore recommends using a machine where the number of CPU cores is equal to the number of partitions in the SingleStoreDB database.
 
 Additionally, performance is influenced by the data types in the SingleStoreDB database. Performance tests conducted by the SingleStore team demonstrated that nullable data types are slower than non-nullable types. Therefore, consider using non-nullable data types when appropriate.
 
