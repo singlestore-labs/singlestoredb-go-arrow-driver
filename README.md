@@ -18,7 +18,7 @@ The `S2DBArrowReader` provides an API for reading Apache Arrow data from SingleS
 The `NewS2DBArrowReader` function takes `S2DBArrowReaderConfig` as a parameter. Here are the supported reader configurations and their explanations:
 | Name               | Default               | Description  | 
 | :------------------| :-------------------- | :----------- |
-| Conn               | No default (required) | The `sql.DB` object used for communication with the database.
+| Conn               | No default (required) | The `sql.DB` object used to connect with a SingleStoreDB database.
 | Args               | nil (no arguments)    | Arguments for placeholder parameters in the query.
 | RecordSize         | 10000                 | The maximum number of rows in the resulting records.
 | ParallelReadConfig | nil (sequential read) | Additional configurations for parallel read. If this value is non-`nil`, parallel read is enabled.
