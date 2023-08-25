@@ -52,7 +52,9 @@ If this parameter is not set - you will get the following error: `This command i
 ## Usage example
 
 ```go
-db, err := sql.Open("mysql", "root:1@tcp(127.0.0.1:5506)/db?interpolateParams=true")
+dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?interpolateParams=true", "user", "password", "host", 3306, "database")
+dsn += fmt.Sprintf("&connectionAttributes=%s:%s,%s:%s", "program_name", "CompanyName_AppName", "program_version", "1.2.3")
+db, err := sql.Open("mysql", dsn)
 if err != nil {
     // Handle the error
 }
