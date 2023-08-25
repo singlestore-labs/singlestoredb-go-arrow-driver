@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/apache/arrow/go/arrow"
-	"github.com/apache/arrow/go/arrow/array"
-	"github.com/apache/arrow/go/arrow/memory"
+	"github.com/apache/arrow/go/v12/arrow"
+	"github.com/apache/arrow/go/v12/arrow/array"
+	"github.com/apache/arrow/go/v12/arrow/memory"
 	"github.com/singlestore-labs/singlestoredb-go-arrow-driver/column_handler"
 )
 
@@ -68,7 +68,7 @@ func NewS2DBArrowReaderImpl(ctx context.Context, conf S2DBArrowReaderConfig) (S2
 	}, err
 }
 
-func (s2db *S2DBArrowReaderImpl) GetNextArrowRecordBatch() (array.Record, error) {
+func (s2db *S2DBArrowReaderImpl) GetNextArrowRecordBatch() (arrow.Record, error) {
 	var err error = nil
 	rowsRead := int64(0)
 

@@ -2,8 +2,8 @@ package column_handler
 
 import (
 	"github.com/Thor-x86/nullable"
-	"github.com/apache/arrow/go/arrow"
-	"github.com/apache/arrow/go/arrow/array"
+	"github.com/apache/arrow/go/v12/arrow"
+	"github.com/apache/arrow/go/v12/arrow/array"
 )
 
 type NullUint64ColumnHandler struct {

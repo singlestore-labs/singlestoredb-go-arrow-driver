@@ -7,6 +7,21 @@ Run the following command to add the SingleStoreDB Go Arrow driver as a dependen
 go get github.com/singlestore-labs/singlestoredb-go-arrow-driver
 ```
 
+MySQL driver dependency is required to use this driver:
+```
+go get github.com/go-sql-driver/mysql@v1.7.2-0.20230809113539-7cf548287682
+```
+
+Use the following code to import dependencies:
+```
+import (
+	"database/sql"
+
+ 	_ "github.com/go-sql-driver/mysql"
+	s2db_arrow_driver "github.com/singlestore-labs/singlestoredb-go-arrow-driver"
+)
+```
+
 ## API
 
 The `S2DBArrowReader` interface provides an API for reading Apache Arrow data from SingleStoreDB databases. To create a new instance of `S2DBArrowReader`, use the `NewS2DBArrowReader` function. `S2DBArrowReader` provides the following methods:
@@ -30,10 +45,14 @@ The `S2DBParallelReadConfig` allows you to configure additional settings for par
 | DatabaseName       | No default (required) | The name of the SingleStoreDB database. It is used to determine the number of partitions for parallel reading.
 | ChannelSize        | 10000                 | The size of the channel buffer. The channel stores references to Arrow Records while reading is in progress and transfers them to the main `goroutine`.
 
+> note: 
+Set `interpolateParams=true` parameter of the `sql.DB` in order to use parallel read.
+If this parameter is not set - you will get the following error: `This command is not supported in the prepared statement protocol yet`
+
 ## Usage example
 
 ```go
-db, err := sql.Open("mysql", "root:1@tcp(127.0.0.1:5506)/db")
+db, err := sql.Open("mysql", "root:1@tcp(127.0.0.1:5506)/db?interpolateParams=true")
 if err != nil {
     // Handle the error
 }
@@ -42,7 +61,8 @@ arrowReader, err := s2db_arrow_driver.NewS2DBArrowReader(
     context.Background(), 
     s2db_arrow_driver.S2DBArrowReaderConfig{
 	    Conn:  db,
-	    Query: "SELECT * FROM t",
+	    Query: "SELECT * FROM t WHERE a > ? AND a < ?",
+        Args: []interface{}{1, 10}
 	    ParallelReadConfig: &s2db_arrow_driver.S2DBParallelReadConfig{
 		    DatabaseName: "db",
 	    },
