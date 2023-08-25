@@ -7,6 +7,21 @@ Run the following command to add the SingleStoreDB Go Arrow driver as a dependen
 go get github.com/singlestore-labs/singlestoredb-go-arrow-driver
 ```
 
+MySQL driver dependency is required to use this driver:
+```
+go get github.com/go-sql-driver/mysql
+```
+
+Use the following code to import dependencies:
+```
+import (
+	"database/sql"
+
+ 	_ "github.com/go-sql-driver/mysql"
+	s2db_arrow_driver "github.com/singlestore-labs/singlestoredb-go-arrow-driver"
+)
+```
+
 ## API
 
 The `S2DBArrowReader` interface provides an API for reading Apache Arrow data from SingleStoreDB databases. To create a new instance of `S2DBArrowReader`, use the `NewS2DBArrowReader` function. `S2DBArrowReader` provides the following methods:
