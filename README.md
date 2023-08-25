@@ -62,7 +62,7 @@ arrowReader, err := s2db_arrow_driver.NewS2DBArrowReader(
     s2db_arrow_driver.S2DBArrowReaderConfig{
 	    Conn:  db,
 	    Query: "SELECT * FROM t WHERE a > ? AND a < ?",
-        Args: []interface{}{1, 10}
+            Args: []interface{}{1, 10},
 	    ParallelReadConfig: &s2db_arrow_driver.S2DBParallelReadConfig{
 		    DatabaseName: "db",
 	    },
