@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"sync/atomic"
 
-	"github.com/apache/arrow/go/arrow/array"
+	"github.com/apache/arrow/go/v12/arrow"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -19,7 +19,7 @@ type S2DBArrowReaderParallelImpl struct {
 	channelSize     int64
 	resultTableConn *sql.Conn
 	resultTableName string
-	ch              chan array.Record
+	ch              chan arrow.Record
 	errorGroup      *errgroup.Group
 	ctx             context.Context
 }
@@ -74,7 +74,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 		}
 	}()
 
-	ch := make(chan array.Record, conf.ParallelReadConfig.ChannelSize)
+	ch := make(chan arrow.Record, conf.ParallelReadConfig.ChannelSize)
 	finishedPartitions := int32(0)
 	errorGroup := new(errgroup.Group)
 	for i := int32(0); i < partitions; i++ {
@@ -123,7 +123,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 	}, nil
 }
 
-func (s2db *S2DBArrowReaderParallelImpl) GetNextArrowRecordBatch() (array.Record, error) {
+func (s2db *S2DBArrowReaderParallelImpl) GetNextArrowRecordBatch() (arrow.Record, error) {
 	res := <-s2db.ch
 	if res == nil {
 		return nil, s2db.errorGroup.Wait()

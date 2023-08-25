@@ -9,7 +9,7 @@ go get github.com/singlestore-labs/singlestoredb-go-arrow-driver
 
 MySQL driver dependency is required to use this driver:
 ```
-go get github.com/go-sql-driver/mysql@v1.7.1
+go get github.com/go-sql-driver/mysql@v1.7.2-0.20230809113539-7cf548287682
 ```
 
 Use the following code to import dependencies:

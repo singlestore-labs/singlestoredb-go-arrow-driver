@@ -3,8 +3,8 @@ package column_handler
 import (
 	"database/sql"
 
-	"github.com/apache/arrow/go/arrow"
-	"github.com/apache/arrow/go/arrow/array"
+	"github.com/apache/arrow/go/v12/arrow"
+	"github.com/apache/arrow/go/v12/arrow/array"
 )
 
 type NullInt8ColumnHandler struct {
