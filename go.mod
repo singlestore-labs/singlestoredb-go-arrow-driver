@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/Thor-x86/nullable v1.0.0
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40
-	github.com/go-sql-driver/mysql v1.7.2-0.20230809113539-7cf548287682
+	github.com/go-sql-driver/mysql v1.7.1
 	golang.org/x/sync v0.3.0
 )
 
