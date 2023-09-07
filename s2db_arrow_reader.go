@@ -32,6 +32,9 @@ type S2DBArrowReaderConfig struct {
 	// ParallelReadConfig specifies aditional configurations for parallel read
 	// By default it is nil and it means that parallel read is not used
 	ParallelReadConfig *S2DBParallelReadConfig
+	// EnableDebugLogging controls whether the driver should generate debug logs
+	// Debug logs are printed to the standard output
+	EnableDebugLogging bool
 }
 
 type S2DBParallelReadConfig struct {

@@ -37,6 +37,7 @@ The `NewS2DBArrowReader` function takes `S2DBArrowReaderConfig` as a parameter. 
 | Args               | nil (no arguments)    | Arguments for placeholder parameters in the query.
 | RecordSize         | 10000                 | The maximum number of rows in the resulting records.
 | ParallelReadConfig | nil (sequential read) | Additional configurations for parallel read. If this value is non-`nil`, parallel read is enabled.
+| EnableDebugLogging | false                 | Controls whether the driver should generate debug logs. Debug logs are printed to the standard output.
 
 The `S2DBParallelReadConfig` allows you to configure additional settings for parallel read. Here are the additional configurations that can be set:
 

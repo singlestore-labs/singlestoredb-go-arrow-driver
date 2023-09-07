@@ -22,6 +22,7 @@ type S2DBArrowReaderImpl struct {
 
 func NewS2DBArrowReaderImpl(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBArrowReader, error) {
 	var err error = nil
+	logQueryExecution(conf.EnableDebugLogging, conf.Query, conf.Args...)
 	rows, err := conf.Conn.QueryContext(ctx, conf.Query, conf.Args...)
 	if err != nil {
 		return nil, err

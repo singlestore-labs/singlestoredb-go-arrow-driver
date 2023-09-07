@@ -33,7 +33,7 @@ func read(conn *sql.DB, query string) error {
 }
 
 func readParallel(conn *sql.DB, query string) error {
-	partitions, err := getPartitionsCount(context.Background(), conn, "db")
+	partitions, err := getPartitionsCount(context.Background(), conn, "db", false)
 	if err != nil {
 		return err
 	}
@@ -80,8 +80,9 @@ func readParallel(conn *sql.DB, query string) error {
 
 func readArrow(conn *sql.DB, query string) error {
 	arrowReader, err := NewS2DBArrowReader(context.Background(), S2DBArrowReaderConfig{
-		Conn:  conn,
-		Query: query,
+		Conn:               conn,
+		Query:              query,
+		EnableDebugLogging: true,
 	})
 	if err != nil {
 		return err
@@ -105,6 +106,7 @@ func readArrowParallel(conn *sql.DB, query string) error {
 		ParallelReadConfig: &S2DBParallelReadConfig{
 			DatabaseName: "db",
 		},
+		EnableDebugLogging: true,
 	})
 	if err != nil {
 		return err
@@ -136,6 +138,21 @@ func benchmark(b *testing.B, read readFunction) {
 		if err != nil {
 			b.Error(err)
 		}
+	}
+}
+
+func test(t *testing.T, read readFunction) {
+	db, err := sql.Open("mysql", "root:1@tcp(127.0.0.1:5506)/db")
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Close()
+
+	query := "SELECT * FROM t"
+
+	err = read(db, query)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
@@ -206,4 +223,8 @@ func BenchmarkReadArrow(b *testing.B) {
 
 func BenchmarkReadArrowParallel(b *testing.B) {
 	benchmark(b, readArrowParallel)
+}
+
+func TestReadArrowParallel(t *testing.T) {
+	test(t, readArrowParallel)
 }
