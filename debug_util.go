@@ -6,40 +6,55 @@ import (
 	"fmt"
 )
 
-func logQueryExecution(loggingEnabled bool, query string, args ...interface{}) {
+type executable interface {
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+}
+
+type queriable interface {
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+}
+
+func execContext(ctx context.Context, conn executable, query string, loggingEnabled bool, args ...interface{}) (sql.Result, error) {
 	if loggingEnabled {
 		fmt.Printf("Executing query (query: '%s', args: '%v')\n", query, args)
 	}
+	return conn.ExecContext(ctx, query, args...)
 }
 
-func profileQuery(loggingEnabled bool, ctx context.Context, conn *sql.Conn, query string) {
+func queryContext(ctx context.Context, conn queriable, query string, loggingEnabled bool, args ...interface{}) (*sql.Rows, error) {
+	if loggingEnabled {
+		fmt.Printf("Executing query (query: '%s', args: '%v')\n", query, args)
+	}
+	return conn.QueryContext(ctx, query, args...)
+}
+
+func profileQuery(loggingEnabled bool, ctx context.Context, conn *sql.Conn, query string, args ...interface{}) {
 	if !loggingEnabled {
 		return
 	}
 
-	execute := func(query string) error {
-		logQueryExecution(loggingEnabled, query)
-		_, err := conn.ExecContext(ctx, query)
-		if err != nil {
-			fmt.Printf("Failed to perform profiling (%s)\n", err)
-			return err
-		}
-
-		return nil
+	execute := func(query string, args ...interface{}) error {
+		_, err := execContext(ctx, conn, query, loggingEnabled)
+		return err
 	}
 
-	err := execute(fmt.Sprintf("CREATE TEMPORARY TABLE temp AS SELECT * FROM (%s) LIMIT 0", query))
+	err := execute(fmt.Sprintf("CREATE TEMPORARY TABLE temp AS SELECT * FROM (%s) LIMIT 0", query), args...)
 	if err != nil {
+		fmt.Printf("Failed to perform profiling (%s)\n", err)
 		return
 	}
 	defer execute("DROP TEMPORARY TABLE temp")
-	execute("SET SESSION profile_for_debug=1")
+
+	err = execute("SET SESSION profile_for_debug=1")
 	if err != nil {
+		fmt.Printf("Failed to perform profiling (%s)\n", err)
 		return
 	}
 	defer execute("SET SESSION profile_for_debug=0")
-	execute(fmt.Sprintf("PROFILE INSERT INTO temp SELECT * FROM (%s)", query))
+
+	err = execute(fmt.Sprintf("PROFILE INSERT INTO temp SELECT * FROM (%s)", query), args...)
 	if err != nil {
+		fmt.Printf("Failed to perform profiling (%s)\n", err)
 		return
 	}
 
@@ -56,7 +71,7 @@ func profileQuery(loggingEnabled bool, ctx context.Context, conn *sql.Conn, quer
 	}
 
 	var profile string
-	rows.Scan(&profile)
+	err = rows.Scan(&profile)
 	if err != nil {
 		fmt.Printf("Failed to perform profiling (%s)\n", err)
 		return

@@ -27,8 +27,7 @@ type S2DBArrowReaderParallelImpl struct {
 
 func getPartitionsCount(ctx context.Context, conn S2SqlDbWrapper, database string, loggingEnabled bool) (int32, error) {
 	query := fmt.Sprintf("SELECT num_partitions FROM information_schema.DISTRIBUTED_DATABASES WHERE database_name = '%s'", database)
-	logQueryExecution(loggingEnabled, query)
-	rows, err := conn.QueryContext(ctx, query)
+	rows, err := queryContext(ctx, conn, query, loggingEnabled)
 	if err != nil {
 		return 0, err
 	}
@@ -67,16 +66,14 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 
 	resultTableName := generateTableName(conf.Query)
 	createResultTableQuery := fmt.Sprintf("CREATE RESULT TABLE `%s` AS SELECT * FROM (%s)", resultTableName, conf.Query)
-	profileQuery(conf.EnableDebugLogging, ctx, resultTableConn, conf.Query)
-	logQueryExecution(conf.EnableDebugLogging, createResultTableQuery, conf.Args)
-	if _, err = resultTableConn.ExecContext(ctx, createResultTableQuery, conf.Args...); err != nil {
+	profileQuery(conf.EnableDebugLogging, ctx, resultTableConn, conf.Query, conf.Args...)
+	if _, err = execContext(ctx, resultTableConn, createResultTableQuery, conf.EnableDebugLogging, conf.Args...); err != nil {
 		return nil, err
 	}
 	defer func() {
 		if err != nil {
 			dropQuery := fmt.Sprintf("DROP RESULT TABLE `%s`", resultTableName)
-			logQueryExecution(conf.EnableDebugLogging, dropQuery)
-			resultTableConn.ExecContext(ctx, dropQuery)
+			execContext(ctx, resultTableConn, dropQuery, conf.EnableDebugLogging)
 		}
 	}()
 
@@ -143,8 +140,7 @@ func (s2db *S2DBArrowReaderParallelImpl) GetNextArrowRecordBatch() (arrow.Record
 func (s2db *S2DBArrowReaderParallelImpl) Close() error {
 	if s2db.resultTableConn != nil {
 		dropQuery := fmt.Sprintf("DROP RESULT TABLE `%s`", s2db.resultTableName)
-		logQueryExecution(s2db.enableDebugLogging, dropQuery)
-		s2db.resultTableConn.ExecContext(s2db.ctx, dropQuery)
+		execContext(s2db.ctx, s2db.resultTableConn, dropQuery, s2db.enableDebugLogging)
 		return s2db.resultTableConn.Close()
 	}
 
