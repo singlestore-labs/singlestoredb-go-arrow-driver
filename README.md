@@ -37,13 +37,15 @@ The `NewS2DBArrowReader` function takes `S2DBArrowReaderConfig` as a parameter. 
 | Args               | nil (no arguments)    | Arguments for placeholder parameters in the query.
 | RecordSize         | 10000                 | The maximum number of rows in the resulting records.
 | ParallelReadConfig | nil (sequential read) | Additional configurations for parallel read. If this value is non-`nil`, parallel read is enabled.
+| EnableQueryLogging | false                 | Controls whether the driver should generate debug logs. Debug logs are printed to the standard output.
 
 The `S2DBParallelReadConfig` allows you to configure additional settings for parallel read. Here are the additional configurations that can be set:
 
-| Name               | Default               | Description  | 
-| :------------------| :-------------------- | :----------- |
-| DatabaseName       | No default (required) | The name of the SingleStoreDB database. It is used to determine the number of partitions for parallel reading.
-| ChannelSize        | 10000                 | The size of the channel buffer. The channel stores references to Arrow Records while reading is in progress and transfers them to the main `goroutine`.
+| Name                 | Default               | Description  | 
+| :------------------- | :-------------------- | :----------- |
+| DatabaseName         | No default (required) | The name of the SingleStoreDB database. It is used to determine the number of partitions for parallel reading.
+| ChannelSize          | 10000                 | The size of the channel buffer. The channel stores references to Arrow Records while reading is in progress and transfers them to the main `goroutine`.
+| EnableDebugProfiling | false                 | Controls whether to profile the query. Profiling result is printed to the standart output.
 
 > note: 
 Set `interpolateParams=true` parameter of the `sql.DB` in order to use parallel read.

@@ -33,7 +33,7 @@ func read(conn *sql.DB, query string) error {
 }
 
 func readParallel(conn *sql.DB, query string) error {
-	partitions, err := getPartitionsCount(context.Background(), conn, "db")
+	partitions, err := getPartitionsCount(context.Background(), conn, "db", false)
 	if err != nil {
 		return err
 	}
@@ -139,6 +139,21 @@ func benchmark(b *testing.B, read readFunction) {
 	}
 }
 
+func test(t *testing.T, read readFunction) {
+	db, err := sql.Open("mysql", "root:1@tcp(127.0.0.1:5506)/db")
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Close()
+
+	query := "SELECT * FROM t"
+
+	err = read(db, query)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func createTable(db *sql.DB) error {
 	_, err := db.Exec("DROP TABLE IF EXISTS t")
 	if err != nil {
@@ -206,4 +221,8 @@ func BenchmarkReadArrow(b *testing.B) {
 
 func BenchmarkReadArrowParallel(b *testing.B) {
 	benchmark(b, readArrowParallel)
+}
+
+func TestReadArrowParallel(t *testing.T) {
+	test(t, readArrowParallel)
 }

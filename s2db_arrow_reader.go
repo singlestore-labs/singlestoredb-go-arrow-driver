@@ -32,6 +32,9 @@ type S2DBArrowReaderConfig struct {
 	// ParallelReadConfig specifies aditional configurations for parallel read
 	// By default it is nil and it means that parallel read is not used
 	ParallelReadConfig *S2DBParallelReadConfig
+	// EnableQueryLogging controls whether the driver should generate debug logs
+	// Debug logs are printed to the standard output
+	EnableQueryLogging bool
 }
 
 type S2DBParallelReadConfig struct {
@@ -43,6 +46,9 @@ type S2DBParallelReadConfig struct {
 	// and transfer them to the main goroutine
 	// The default value is 10000
 	ChannelSize int64
+	// Controls whether to profile the query
+	// Profiling result is printed to the standart output
+	EnableDebugProfiling bool
 }
 
 // NewS2DBArrowReader creates an instance of S2DBArrowReader
