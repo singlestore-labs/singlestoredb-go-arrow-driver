@@ -2,8 +2,11 @@ package s2db_arrow_driver
 
 import (
 	"context"
+	"crypto/md5"
 	"database/sql"
 	"fmt"
+	"math/rand"
+	"strconv"
 )
 
 type executable interface {
@@ -29,21 +32,18 @@ func queryContext(ctx context.Context, conn queriable, query string, loggingEnab
 }
 
 func profileQuery(loggingEnabled bool, ctx context.Context, conn *sql.Conn, query string, args ...interface{}) {
-	if !loggingEnabled {
-		return
-	}
-
 	execute := func(query string, args ...interface{}) error {
 		_, err := execContext(ctx, conn, query, loggingEnabled)
 		return err
 	}
 
-	err := execute(fmt.Sprintf("CREATE TEMPORARY TABLE temp AS SELECT * FROM (%s) LIMIT 0", query), args...)
+	profileTable := "goArrowProfile_" + fmt.Sprintf("%x", md5.Sum([]byte(query))) + "_" + strconv.Itoa(rand.Intn(4294967295))
+	err := execute(fmt.Sprintf("CREATE TEMPORARY TABLE %s AS SELECT * FROM (%s) LIMIT 0", profileTable, query), args...)
 	if err != nil {
 		fmt.Printf("Failed to perform profiling (%s)\n", err)
 		return
 	}
-	defer execute("DROP TEMPORARY TABLE temp")
+	defer execute(fmt.Sprintf("DROP TEMPORARY TABLE %s", profileTable))
 
 	err = execute("SET SESSION profile_for_debug=1")
 	if err != nil {
@@ -52,7 +52,7 @@ func profileQuery(loggingEnabled bool, ctx context.Context, conn *sql.Conn, quer
 	}
 	defer execute("SET SESSION profile_for_debug=0")
 
-	err = execute(fmt.Sprintf("PROFILE INSERT INTO temp SELECT * FROM (%s)", query), args...)
+	err = execute(fmt.Sprintf("PROFILE INSERT INTO %s SELECT * FROM (%s)", profileTable, query), args...)
 	if err != nil {
 		fmt.Printf("Failed to perform profiling (%s)\n", err)
 		return

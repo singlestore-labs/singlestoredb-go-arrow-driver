@@ -80,9 +80,8 @@ func readParallel(conn *sql.DB, query string) error {
 
 func readArrow(conn *sql.DB, query string) error {
 	arrowReader, err := NewS2DBArrowReader(context.Background(), S2DBArrowReaderConfig{
-		Conn:               conn,
-		Query:              query,
-		EnableDebugLogging: true,
+		Conn:  conn,
+		Query: query,
 	})
 	if err != nil {
 		return err
@@ -106,7 +105,6 @@ func readArrowParallel(conn *sql.DB, query string) error {
 		ParallelReadConfig: &S2DBParallelReadConfig{
 			DatabaseName: "db",
 		},
-		EnableDebugLogging: true,
 	})
 	if err != nil {
 		return err

@@ -22,7 +22,7 @@ type S2DBArrowReaderParallelImpl struct {
 	ch                 chan arrow.Record
 	errorGroup         *errgroup.Group
 	ctx                context.Context
-	enableDebugLogging bool
+	enableQueryLogging bool
 }
 
 func getPartitionsCount(ctx context.Context, conn S2SqlDbWrapper, database string, loggingEnabled bool) (int32, error) {
@@ -49,7 +49,7 @@ func generateTableName(query string) string {
 }
 
 func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBArrowReader, error) {
-	partitions, err := getPartitionsCount(ctx, conf.Conn, conf.ParallelReadConfig.DatabaseName, conf.EnableDebugLogging)
+	partitions, err := getPartitionsCount(ctx, conf.Conn, conf.ParallelReadConfig.DatabaseName, conf.EnableQueryLogging)
 	if err != nil {
 		return nil, err
 	}
@@ -66,14 +66,16 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 
 	resultTableName := generateTableName(conf.Query)
 	createResultTableQuery := fmt.Sprintf("CREATE RESULT TABLE `%s` AS SELECT * FROM (%s)", resultTableName, conf.Query)
-	profileQuery(conf.EnableDebugLogging, ctx, resultTableConn, conf.Query, conf.Args...)
-	if _, err = execContext(ctx, resultTableConn, createResultTableQuery, conf.EnableDebugLogging, conf.Args...); err != nil {
+	if conf.ParallelReadConfig.EnableDebugProfiling {
+		profileQuery(conf.EnableQueryLogging, ctx, resultTableConn, conf.Query, conf.Args...)
+	}
+	if _, err = execContext(ctx, resultTableConn, createResultTableQuery, conf.EnableQueryLogging, conf.Args...); err != nil {
 		return nil, err
 	}
 	defer func() {
 		if err != nil {
 			dropQuery := fmt.Sprintf("DROP RESULT TABLE `%s`", resultTableName)
-			execContext(ctx, resultTableConn, dropQuery, conf.EnableDebugLogging)
+			execContext(ctx, resultTableConn, dropQuery, conf.EnableQueryLogging)
 		}
 	}()
 
@@ -95,7 +97,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 					Conn:               conf.Conn,
 					Query:              fmt.Sprintf("SELECT * FROM ::`%s` WHERE partition_id() = %d", resultTableName, partition),
 					RecordSize:         conf.RecordSize,
-					EnableDebugLogging: conf.EnableDebugLogging,
+					EnableQueryLogging: conf.EnableQueryLogging,
 				})
 				if err != nil {
 					return err
@@ -124,7 +126,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 		ch:                 ch,
 		errorGroup:         errorGroup,
 		ctx:                ctx,
-		enableDebugLogging: conf.EnableDebugLogging,
+		enableQueryLogging: conf.EnableQueryLogging,
 	}, nil
 }
 
@@ -140,7 +142,7 @@ func (s2db *S2DBArrowReaderParallelImpl) GetNextArrowRecordBatch() (arrow.Record
 func (s2db *S2DBArrowReaderParallelImpl) Close() error {
 	if s2db.resultTableConn != nil {
 		dropQuery := fmt.Sprintf("DROP RESULT TABLE `%s`", s2db.resultTableName)
-		execContext(s2db.ctx, s2db.resultTableConn, dropQuery, s2db.enableDebugLogging)
+		execContext(s2db.ctx, s2db.resultTableConn, dropQuery, s2db.enableQueryLogging)
 		return s2db.resultTableConn.Close()
 	}
 
