@@ -29,6 +29,9 @@ type S2DBArrowReaderConfig struct {
 	// RecordSize identifies maximum number of rows in the resulting records
 	// By default it is 10000
 	RecordSize int64
+	// UseClientConvesion indicates if the data should be converted to Arrow Record
+	// format on the client. For production use, it should be false
+	UseClientConvesion bool
 	// ParallelReadConfig specifies aditional configurations for parallel read
 	// By default it is nil and it means that parallel read is not used
 	ParallelReadConfig *S2DBParallelReadConfig
@@ -67,7 +70,11 @@ func NewS2DBArrowReader(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBAr
 	}
 
 	if conf.ParallelReadConfig == nil {
-		return NewS2DBArrowReaderImpl(ctx, conf)
+		if conf.UseClientConvesion {
+			return NewS2DBArrowReaderImpl(ctx, conf)
+		} else {
+			return NewS2DBServerArrowReaderImpl(ctx, conf)
+		}
 	} else {
 		if conf.ParallelReadConfig.DatabaseName == "" {
 			return nil, errors.New("'DatabaseName' is a required configuration for parallel read")
@@ -76,6 +83,11 @@ func NewS2DBArrowReader(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBAr
 		if conf.ParallelReadConfig.ChannelSize == 0 {
 			conf.ParallelReadConfig.ChannelSize = 10000
 		}
-		return NewS2DBArrowReaderParallelImpl(ctx, conf)
+		if conf.UseClientConvesion {
+			return NewS2DBArrowReaderParallelImpl(ctx, conf)
+		} else {
+			// TODO: use Server Arrow transform here
+			return NewS2DBArrowReaderParallelImpl(ctx, conf)
+		}
 	}
 }
