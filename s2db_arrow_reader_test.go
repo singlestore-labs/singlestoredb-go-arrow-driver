@@ -21,7 +21,7 @@ var DSN_BASE = fmt.Sprintf("%s:%s@tcp(%s:%d)/", USER, PASSWORD, HOST, PORT)
 var DSN = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", USER, PASSWORD, HOST, PORT, DB)
 
 var CREATE_TEST_TABLE = true
-var DROP_TEST_TABLE = false
+var DROP_TEST_TABLE = true
 
 type readFunction func(*sql.DB, string) error
 
@@ -229,14 +229,16 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	defer db.Close()
-
-	err = beforeAllCreateTable(db)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if CREATE_TEST_TABLE { 
+		err = beforeAllCreateTable(db)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
-	defer afterAllDropTable(db)
-
+	if DROP_TEST_TABLE {
+		defer afterAllDropTable(db)
+	}
 	code := m.Run()
 	os.Exit(code)
 }
