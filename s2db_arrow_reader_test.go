@@ -22,7 +22,7 @@ var PORT = 3306
 var DSN_BASE = fmt.Sprintf("%s:%s@tcp(%s:%d)/", USER, PASSWORD, HOST, PORT)
 var DSN = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", USER, PASSWORD, HOST, PORT, DB)
 
-var CREATE_TEST_TABLE = false
+var CREATE_TEST_TABLE = true
 var DROP_TEST_TABLE = false
 var PROCESS_READ_RESULTS = true
 var TEST_PARALLEL = false
@@ -42,7 +42,7 @@ func beforeAllCreateTable(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("CREATE TABLE t(a BIGINT PRIMARY KEY, b DOUBLE, t TEXT)")
+	_, err = db.Exec("CREATE TABLE t(a BIGINT, b DOUBLE, t TEXT)")
 	if err != nil {
 		return err
 	}
