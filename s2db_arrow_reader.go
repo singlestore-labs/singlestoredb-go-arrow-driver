@@ -79,15 +79,9 @@ func NewS2DBArrowReader(ctx context.Context, conf S2DBArrowReaderConfig) (S2DBAr
 		if conf.ParallelReadConfig.DatabaseName == "" {
 			return nil, errors.New("'DatabaseName' is a required configuration for parallel read")
 		}
-
 		if conf.ParallelReadConfig.ChannelSize == 0 {
 			conf.ParallelReadConfig.ChannelSize = 10000
 		}
-		if conf.UseClientConvesion {
-			return NewS2DBArrowReaderParallelImpl(ctx, conf)
-		} else {
-			// TODO: use Server Arrow transform here
-			return NewS2DBArrowReaderParallelImpl(ctx, conf)
-		}
+		return NewS2DBArrowReaderParallelImpl(ctx, conf)
 	}
 }
