@@ -14,18 +14,22 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var USER = "root"
-var PASSWORD = ""
 var HOST = "127.0.0.1"
+var PORT = 5506
+var USER = "root"
+var PASSWORD = "p"
+
 var DB = "testdb"
-var PORT = 3306
 var DSN_BASE = fmt.Sprintf("%s:%s@tcp(%s:%d)/", USER, PASSWORD, HOST, PORT)
 var DSN = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", USER, PASSWORD, HOST, PORT, DB)
 
-var CREATE_TEST_TABLE = true
+// Set CREATE_TEST_TABLE and DROP_TEST_TABLE to false if you need to run test repeatedly.
+// On the first run CREATE_TEST_TABLE must be true, and DROP_TEST_TABLE can be false for repeated runs
+var CREATE_TEST_TABLE = false
 var DROP_TEST_TABLE = false
+
 var PROCESS_READ_RESULTS = true
-var TEST_PARALLEL = false
+var PRINT_DEBUG_OUTPUT = true
 
 type readFunction func(*sql.DB, string) error
 
@@ -93,8 +97,9 @@ func readRegular(conn *sql.DB, query string) error {
 			sumDouble += *b.Get()
 		}
 	}
-	fmt.Printf("readRegular sumInt: %d, sumDouble: %f\n", sumInt, sumDouble)
-
+	if PRINT_DEBUG_OUTPUT {
+		fmt.Printf("readRegular sumInt: %d, sumDouble: %f\n", sumInt, sumDouble)
+	}
 	return nil
 }
 
@@ -118,6 +123,9 @@ func readParallelRegular(conn *sql.DB, query string) error {
 	defer resultTableConn.ExecContext(context.Background(), "DROP RESULT TABLE tmp")
 
 	errorGroup := new(errgroup.Group)
+	a := new(int64)
+	b := new(nullable.Float64)
+	c := new(sql.NullString)
 	for i := 0; i < int(partitions); i++ {
 		partition := i
 		errorGroup.Go(func() error {
@@ -127,9 +135,6 @@ func readParallelRegular(conn *sql.DB, query string) error {
 			}
 			defer rows.Close()
 
-			a := new(int64)
-			b := new(nullable.Float64)
-			c := new(sql.NullString)
 			for rows.Next() {
 				err = rows.Scan(a, b, c)
 				if err != nil {
@@ -158,7 +163,7 @@ func readArrowGen(conn *sql.DB, query string, conf S2DBArrowReaderConfig, readTy
 		if err != nil {
 			return err
 		}
-		if sumInt == 0 {
+		if sumInt == 0 && PRINT_DEBUG_OUTPUT {
 			fmt.Printf("%s schema: %v\n", readType, batch.Schema())
 		}
 		arrInt := batch.Column(0).(*array.Int64)
@@ -169,8 +174,9 @@ func readArrowGen(conn *sql.DB, query string, conf S2DBArrowReaderConfig, readTy
 			sumFloat += arrDouble.Value(i)
 		}
 	}
-	fmt.Printf("%s sum int: %d, sumFloat: %f, nBatches: %d\n", readType, sumInt, sumFloat, nBatches)
-
+	if PRINT_DEBUG_OUTPUT {
+		fmt.Printf("%s sum int: %d, sumFloat: %f, nBatches: %d\n", readType, sumInt, sumFloat, nBatches)
+	}
 	return nil
 }
 
@@ -179,10 +185,11 @@ func readArrow(conn *sql.DB, query string) error {
 		conn,
 		query,
 		S2DBArrowReaderConfig{
-			Conn:  conn,
-			Query: query,
-			RecordSize: 1000,
+			Conn:               conn,
+			Query:              query,
+			RecordSize:         1000,
 			UseClientConvesion: true,
+			EnableQueryLogging: PRINT_DEBUG_OUTPUT,
 		},
 		"Read Arrow, convert on Client")
 }
@@ -192,13 +199,14 @@ func readArrowParallel(conn *sql.DB, query string) error {
 		conn,
 		query,
 		S2DBArrowReaderConfig{
-			Conn:  conn,
-			Query: query,
+			Conn:       conn,
+			Query:      query,
 			RecordSize: 1000,
 			ParallelReadConfig: &S2DBParallelReadConfig{
 				DatabaseName: DB,
 			},
 			UseClientConvesion: true,
+			EnableQueryLogging: PRINT_DEBUG_OUTPUT,
 		},
 		"Read Arrow in Parallel, convert on Client")
 }
@@ -208,10 +216,11 @@ func readArrowServer(conn *sql.DB, query string) error {
 		conn,
 		query,
 		S2DBArrowReaderConfig{
-			Conn:  conn,
-			Query: query,
-			RecordSize: 1000,
+			Conn:               conn,
+			Query:              query,
+			RecordSize:         1000,
 			UseClientConvesion: false,
+			EnableQueryLogging: PRINT_DEBUG_OUTPUT,
 		},
 		"Read Arrow, convert on Server")
 }
@@ -221,13 +230,14 @@ func readArrowServerParallel(conn *sql.DB, query string) error {
 		conn,
 		query,
 		S2DBArrowReaderConfig{
-			Conn:  conn,
-			Query: query,
+			Conn:       conn,
+			Query:      query,
 			RecordSize: 1000,
 			ParallelReadConfig: &S2DBParallelReadConfig{
 				DatabaseName: DB,
 			},
 			UseClientConvesion: false,
+			EnableQueryLogging: PRINT_DEBUG_OUTPUT,
 		},
 		"Read Arrow in Parallel, convert on Server")
 }
@@ -271,7 +281,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	defer db.Close()
-	if CREATE_TEST_TABLE { 
+	if CREATE_TEST_TABLE {
 		err = beforeAllCreateTable(db)
 		if err != nil {
 			fmt.Println(err)
@@ -290,9 +300,7 @@ func BenchmarkReadRegular(b *testing.B) {
 }
 
 func BenchmarkReadParallel(b *testing.B) {
-	if TEST_PARALLEL {
-		benchmark(b, readParallelRegular)
-	}
+	benchmark(b, readParallelRegular)
 }
 
 func BenchmarkReadArrow(b *testing.B) {
@@ -300,9 +308,7 @@ func BenchmarkReadArrow(b *testing.B) {
 }
 
 func BenchmarkReadArrowParallel(b *testing.B) {
-	if TEST_PARALLEL {
-		benchmark(b, readArrowParallel)
-	}
+	benchmark(b, readArrowParallel)
 }
 
 func BenchmarkReadArrowServer(b *testing.B) {
@@ -310,9 +316,7 @@ func BenchmarkReadArrowServer(b *testing.B) {
 }
 
 func BenchmarkReadArrowServerParallel(b *testing.B) {
-	if TEST_PARALLEL {
-		benchmark(b, readArrowServerParallel)
-	}
+	benchmark(b, readArrowServerParallel)
 }
 
 func TestReadArrow(t *testing.T) {
@@ -320,9 +324,7 @@ func TestReadArrow(t *testing.T) {
 }
 
 func TestReadArrowParallel(t *testing.T) {
-	if TEST_PARALLEL {
-		test(t, readArrowParallel)
-	}
+	test(t, readArrowParallel)
 }
 
 func TestReadArrowServer(t *testing.T) {
@@ -330,7 +332,5 @@ func TestReadArrowServer(t *testing.T) {
 }
 
 func TestReadArrowServerParallel(t *testing.T) {
-	if TEST_PARALLEL {
-		test(t, readArrowServerParallel)
-	}
+	test(t, readArrowServerParallel)
 }
