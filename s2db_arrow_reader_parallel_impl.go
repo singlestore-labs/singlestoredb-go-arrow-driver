@@ -109,6 +109,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 					if err != nil {
 						return err
 					}
+
 					ch <- batch
 				}
 

@@ -15,10 +15,10 @@ go get github.com/go-sql-driver/mysql@v1.7.2-0.20230809113539-7cf548287682
 Use the following code to import dependencies:
 ```
 import (
-	"database/sql"
+    "database/sql"
 
- 	_ "github.com/go-sql-driver/mysql"
-	s2db_arrow_driver "github.com/singlestore-labs/singlestoredb-go-arrow-driver"
+    _ "github.com/go-sql-driver/mysql"
+    s2db_arrow_driver "github.com/singlestore-labs/singlestoredb-go-arrow-driver"
 )
 ```
 
@@ -68,13 +68,13 @@ if err != nil {
 arrowReader, err := s2db_arrow_driver.NewS2DBArrowReader(
     context.Background(), 
     s2db_arrow_driver.S2DBArrowReaderConfig{
-	    Conn:  db,
-	    Query: "SELECT * FROM t WHERE a > ? AND a < ?",
+        Conn:  db,
+        Query: "SELECT * FROM t WHERE a > ? AND a < ?",
             Args: []interface{}{1, 10},
         // uncomment lines below to use parallel read instead of Arrow conversion on Server
-	    // ParallelReadConfig: &s2db_arrow_driver.S2DBParallelReadConfig{
-		//     DatabaseName: "db",
-	    // },
+        // ParallelReadConfig: &s2db_arrow_driver.S2DBParallelReadConfig{
+        //     DatabaseName: "db",
+        // },
         // UseClientConvesion: true,
     })
 if err != nil {
@@ -83,9 +83,9 @@ if err != nil {
 defer arrowReader.Close()
 
 for batch, err := arrowReader.GetNextArrowRecordBatch(); batch != nil; batch, err = arrowReader.GetNextArrowRecordBatch() {
-	if err != nil {
+    if err != nil {
         // Handle the error
-	}
+    }
     defer batch.Release()
 
     // Process the batch
