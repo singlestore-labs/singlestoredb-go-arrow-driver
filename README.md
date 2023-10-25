@@ -15,10 +15,10 @@ go get github.com/go-sql-driver/mysql@v1.7.2-0.20230809113539-7cf548287682
 Use the following code to import dependencies:
 ```
 import (
-	"database/sql"
+    "database/sql"
 
- 	_ "github.com/go-sql-driver/mysql"
-	s2db_arrow_driver "github.com/singlestore-labs/singlestoredb-go-arrow-driver"
+    _ "github.com/go-sql-driver/mysql"
+    s2db_arrow_driver "github.com/singlestore-labs/singlestoredb-go-arrow-driver"
 )
 ```
 
@@ -37,6 +37,7 @@ The `NewS2DBArrowReader` function takes `S2DBArrowReaderConfig` as a parameter. 
 | Args               | nil (no arguments)    | Arguments for placeholder parameters in the query.
 | RecordSize         | 10000                 | The maximum number of rows in the resulting records.
 | ParallelReadConfig | nil (sequential read) | Additional configurations for parallel read. If this value is non-`nil`, parallel read is enabled.
+| UseClientConvesion | false                 | Indicates if the data should be converted to Arrow Record format on the client. It can be set to `true` for test purposes, performance optimizations take place only when it is `false`
 | EnableQueryLogging | false                 | Controls whether the driver should generate debug logs. Debug logs are printed to the standard output.
 
 The `S2DBParallelReadConfig` allows you to configure additional settings for parallel read. Here are the additional configurations that can be set:
@@ -47,9 +48,12 @@ The `S2DBParallelReadConfig` allows you to configure additional settings for par
 | ChannelSize          | 10000                 | The size of the channel buffer. The channel stores references to Arrow Records while reading is in progress and transfers them to the main `goroutine`.
 | EnableDebugProfiling | false                 | Controls whether to profile the query. Profiling result is printed to the standart output.
 
-> note: 
+> Note: 
 Set `interpolateParams=true` parameter of the `sql.DB` in order to use parallel read.
 If this parameter is not set - you will get the following error: `This command is not supported in the prepared statement protocol yet`
+
+> Note:
+Currently parallel read with `UseClientConvesion = false` is not supported. So if you set `ParallelReadConfig`, you must also set `UseClientConvesion` to `true`.
 
 ## Usage example
 
@@ -64,12 +68,14 @@ if err != nil {
 arrowReader, err := s2db_arrow_driver.NewS2DBArrowReader(
     context.Background(), 
     s2db_arrow_driver.S2DBArrowReaderConfig{
-	    Conn:  db,
-	    Query: "SELECT * FROM t WHERE a > ? AND a < ?",
+        Conn:  db,
+        Query: "SELECT * FROM t WHERE a > ? AND a < ?",
             Args: []interface{}{1, 10},
-	    ParallelReadConfig: &s2db_arrow_driver.S2DBParallelReadConfig{
-		    DatabaseName: "db",
-	    },
+        // uncomment lines below to use parallel read instead of Arrow conversion on Server
+        // ParallelReadConfig: &s2db_arrow_driver.S2DBParallelReadConfig{
+        //     DatabaseName: "db",
+        // },
+        // UseClientConvesion: true,
     })
 if err != nil {
     // Handle the error
@@ -77,9 +83,9 @@ if err != nil {
 defer arrowReader.Close()
 
 for batch, err := arrowReader.GetNextArrowRecordBatch(); batch != nil; batch, err = arrowReader.GetNextArrowRecordBatch() {
-	if err != nil {
+    if err != nil {
         // Handle the error
-	}
+    }
     defer batch.Release()
 
     // Process the batch
@@ -88,7 +94,7 @@ for batch, err := arrowReader.GetNextArrowRecordBatch(); batch != nil; batch, er
 
 ## Performance Considerations
 
-To achieve maximum performance, consider using parallel read. The performance of parallel read depends on the size of the SingleStore cluster and the number of CPU cores on the machine where the code runs. SingleStore recommends using a machine where the number of CPU cores is equal to the number of partitions in the SingleStoreDB database.
+~~To achieve maximum performance, consider using parallel read. The performance of parallel read depends on the size of the SingleStore cluster and the number of CPU cores on the machine where the code runs. SingleStore recommends using a machine where the number of CPU cores is equal to the number of partitions in the SingleStoreDB database.~~ While the above holds true, parallel read will be supported in the next release.
 
 Additionally, performance is influenced by the data types in the SingleStoreDB database. Performance tests conducted by the SingleStore team demonstrated that nullable data types are slower than non-nullable types. Therefore, consider using non-nullable data types when appropriate.
 

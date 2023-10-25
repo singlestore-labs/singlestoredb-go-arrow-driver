@@ -98,6 +98,7 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 					Query:              fmt.Sprintf("SELECT * FROM ::`%s` WHERE partition_id() = %d", resultTableName, partition),
 					RecordSize:         conf.RecordSize,
 					EnableQueryLogging: conf.EnableQueryLogging,
+					UseClientConvesion: conf.UseClientConvesion,
 				})
 				if err != nil {
 					return err
