@@ -66,6 +66,9 @@ func NewS2DBArrowReaderParallelImpl(ctx context.Context, conf S2DBArrowReaderCon
 
 	resultTableName := generateTableName(conf.Query)
 	createResultTableQuery := fmt.Sprintf("CREATE RESULT TABLE `%s` AS SELECT * FROM (%s)", resultTableName, conf.Query)
+	if !conf.UseClientConvesion {
+		createResultTableQuery += fmt.Sprintf(" OPTION(result_arrow_batch = %d)", conf.RecordSize)
+	}
 	if conf.ParallelReadConfig.EnableDebugProfiling {
 		profileQuery(conf.EnableQueryLogging, ctx, resultTableConn, conf.Query, conf.Args...)
 	}
