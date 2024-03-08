@@ -1,4 +1,7 @@
 # SingleStoreDB Go Arrow Driver
+
+**Attention**: The code in this repository is intended for experimental use only and is not fully tested, documented, or supported by SingleStore. Visit the [SingleStore Forums](https://www.singlestore.com/forum/) to ask questions about this repository.
+
 The SingleStoreDB Go Arrow driver facilitates the reading of data in Apache Arrow format from SingleStoreDB databases. Note that this is the alpha release of the driver, and there may be changes to the API, type conversion, and other internal implementations in the future.
 
 ## Installation
