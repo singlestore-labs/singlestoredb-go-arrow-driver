@@ -138,3 +138,38 @@ The following table maps the SingleStoreDB data types to the corresponding Arrow
 | BLOB                  | binary
 | MEDIUMBLOB            | binary
 | LONGBLOB              | binary
+
+## Release process
+
+Releases are fully automated. The only step required is to push a version tag.
+
+Use semantic versioning with a `v` prefix:
+
+```
+v<major>.<minor>.<patch>[-<pre-release>]
+```
+
+Examples:
+
+- Stable: `v1.0.0`, `v1.2.3`
+- Pre-release: `v1.0.0-alfa.1`, `v1.0.0-alpha.1`
+
+```bash
+# Stable release
+git tag v1.0.1
+git push origin v1.0.1
+
+# Pre-release
+git tag v1.0.1-alfa.1
+git push origin v1.0.1-alfa.1
+```
+
+The module version is derived from the tag (the leading `v` is stripped). Consumers can install a specific version with:
+
+```
+go get github.com/singlestore-labs/singlestoredb-go-arrow-driver@v1.0.1
+```
+
+Pushing a tag triggers the [Release workflow](.github/workflows/release.yml), which creates a GitHub Release with auto-generated release notes. Tags with a pre-release suffix (e.g. `-alfa.1`) are marked as pre-releases; stable tags (e.g. `v1.0.0`) are published as full releases.
+
+The Go module proxy (`proxy.golang.org`) indexes the new version automatically; no separate publish step is required.
