@@ -1,6 +1,6 @@
 module github.com/singlestore-labs/singlestoredb-go-arrow-driver
 
-go 1.18
+go 1.22
 
 require (
 	github.com/Thor-x86/nullable v1.0.0
@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/andybalholm/brotli v1.2.7 // indirect
 	github.com/apache/thrift v0.16.0 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
